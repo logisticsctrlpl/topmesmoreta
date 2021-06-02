@@ -10,8 +10,6 @@ let ssoCookie;
 let loggedIn = false;
 let debug = 0;
 
-let minutesDelay = 5;
-
 let apiAxios = axios.create({
     headers: {
         common: {
@@ -126,12 +124,12 @@ _helpers.postReq(`${loginURL}registerDevice`, {
                 fs.writeFileSync("kdratio.txt", compiledData.kdratio.toString());
                 fs.writeFileSync("teamwipes.txt", compiledData.teamwipes.toString());
               } catch (err) {
-                console.error("[x] Couldn't write to data files");
+                console.error("[x] Couldn't write to data file");
                 console.error(err)
               }
 
-                console.log("[-] Wrote data to files successfully");
-                console.log("[/] Waiting for "+minutesDelay+" mins for next data dump...");
+                console.log("[-] Wrote data to file successfully");
+                console.log("[/] Waiting for 30 mins for next data dump...");
 
                 compiledData = {
                     "wins" : 0,
@@ -140,7 +138,7 @@ _helpers.postReq(`${loginURL}registerDevice`, {
                     "teamwipes": 0
                 };
 
-                await timer(1000 * 60 * minutesDelay);
+                await timer(1000 * 60 * 30);
             }
         })()
 
@@ -158,7 +156,6 @@ async function retrieveStats(start, end) {
     console.log("[-] Building stats request");
 
     var endpoint = _helpers.buildUri(`crm/cod/v2/title/mw/platform/${platform}/${lookupType}/${cleanGamerTag}/matches/wz/start/${start}/end/${end}/details`);
-    var retrievedDate = undefined;
 
     await apiAxios.get(endpoint, { params: { limit: 20 } })
     .then(response => {
@@ -182,10 +179,8 @@ async function retrieveStats(start, end) {
             compiledData.wins += (response.data.data.matches[i].playerStats.teamPlacement == 1) ? 1 : 0;
         }
 
-        retrievedDate = response.data.data.matches.length == 20 ? (response.data.data.matches[response.data.data.matches.length - 1].utcStartSeconds * 1000) - 1 : undefined;
+        return response.data.data.matches[response.data.data.matches.length - 1].utcStartSeconds * 1000;
          
         },
         error => { console.error(error);});
-
-        return retrievedDate;
 }
